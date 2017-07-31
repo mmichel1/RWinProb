@@ -139,7 +139,7 @@ y[2,3] <- sum(data$FinWon_Status == 0) # Lost/Dropped
 
 plotPCA <- function()
 {
-  browser()
+  #browser()
   drops <- c( 
              "Time_bef_Purs",    # correlation with ChangeRec 0.75
              "FinDelStart",           # output variable

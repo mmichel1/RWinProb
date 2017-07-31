@@ -416,19 +416,10 @@ server <- function(input, output,session) {
     
     #----- PCA button pressed ----
     observeEvent(input$RunPCA, {
-      browser()
-      output$Plot_SMOTE_Old_CaseStats <- renderPlot({ 
-        hugo <- 5
-        data_pca <- plotPCA() })
       
-      #output$Plot_SMOTE_New_CaseStats <- renderPlot({ 
-      #  out <- table(data_balanced$FAIL)
-      #  linch <-  max(strwidth(out, "inch")+0.7, na.rm = TRUE)
-      #  par(mai=c(1.02,linch,0.82,0.42))
-      #  x <- barplot(out,horiz = TRUE,cex.names=0.9,las=1,xlab=paste("# of cases"),xlim=c(0,max(out,na.rm=TRUE)+50),col="cornflowerblue",main = 'After SMOTE')
-      #  text(out+pmin((5+out*0.7),20),x,labels=round(out), col="black",cex=0.75)
-      #  })
-      browser()
+      output$Plot_SMOTE_Old_CaseStats <- renderPlot({ 
+        data_pca <<- plotPCA() })    # not really nice coding, but data_pca is not available for print below if not global
+      
       output$dtSMOTEresult = renderPrint({
         summary (data_pca)
         #data_pca$rotation)
