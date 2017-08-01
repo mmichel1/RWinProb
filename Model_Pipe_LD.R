@@ -22,6 +22,13 @@ printpdata <- FALSE         # if printout in Pdata desired
 scatterplot <- FALSE      # it T do scatterplot
 lost_dropped <- TRUE      # combine lost and dropped status as lost/dropped
 
+
+options(scipen=100)
+options(digits=2)
+
+datadir <- 'data';
+
+
 # ===================== Function Lift Chart ======
 library(dplyr)
 library(ggplot2)
@@ -93,20 +100,79 @@ loadData <- function()
   }
 }
 
+plotCaseStats <- function()
+{
+  
+  out <- table(data$FinWon_Status)
+  
+  linch <-  max(strwidth(out, "inch")+0.7, na.rm = TRUE)
+  par(mai=c(1.02,linch,0.82,0.42))
+  x <- barplot(out,horiz = TRUE,cex.names=0.9,las=1,xlab=paste("# of Wafers"),xlim=c(0,max(out,na.rm=TRUE)+50),col="cornflowerblue")
+  text(out+pmin((5+out*0.7),20),x,labels=round(out), col="black",cex=0.75)
+  
+}
+
+
+createSummaryTable <- function()
+{
+  
+  data_value <- copy(data[,3:ncol(data)]);
+  
+  return(t(stat.desc(data_value)))
+  
+}
+
+plotCorrGram <- function(no_cols)
+{
+  #  browser()
+  # Exclude timestamp and FAIL, as they are not  numerical
+  data_value <- subset(copy(data),select=c(-DelStart,-FinOE,-FinDelStart,-FinWon_Status));
+  
+  
+  columns.to.keep<-names(which(colMeans(is.na(data_value)) < 0.5)) # this removes those columns with more than 50% NULLs
+  data_value<-subset(data_value,select = columns.to.keep) #the columns will stay which has less than 50% NAs
+  
+  nzv <- nearZeroVar(data_value)
+  data_value <- data_value[,-nzv]
+  
+  if (no_cols > ncol(data_value))
+  {
+    no_cols <- ncol(data_value);
+  }
+  
+  data_value <-  data_value[,1:no_cols];
+  
+  M <- cor(data_value,use = 'pairwise.complete.obs')
+  col3 <- colorRampPalette(c("red", "white", "blue")) 
+  corrplot(M, method="color",col = col3(20),tl.col="black",na.label=" ",tl.cex=1)
+  
+}
+
+
+
 plotDensity <- function(colname)
 {
-#  browser() 
+  #browser() 
 # ===========================
 # 4.2 Bi-variate analysis / reduction
 # ===========================
-# check category relevancy (0-1) w.r.t. output var. "FinStatus" via barplots
+
+if (sum(colname %in% c('Probability', 'ProjMargin', 'OE', 'ChangeRec', 'Teamfill', 'Time_bef_Purs', 'TCV_SD_bef_Purs'))) {
+  par(mfrow=c(2,1));
+  index_colname <- which(names(data) == colname)
+  hist(data[,index_colname],xlab=paste("Value:",colname),main = 'Histogram',xlim=c(min(data[colname]),max(data[colname])));
+  sm.density.compare(data[,index_colname],group = data$FinWon_Status, xlab=paste("Value:",colname),xlim=c(min(data[colname]),max(data[colname])));
+  title("Density compare");
+  legend("topright",levels(as.factor(data$FinWon_Status)), fill=c(2:(2+length(levels(as.factor(data$FinWon_Status))))),cex=1);
+  
+} else {  
+  # check category relevancy (0-1) w.r.t. output var. "FinStatus" via barplots
 fn_norm_max  = function(y) { return (y/max(y)) }
 y <- array(1:6, dim=c(2,3))
 
 y[1,3] <- sum(data$FinWon_Status == 1) # Won
 y[2,3] <- sum(data$FinWon_Status == 0) # Lost/Dropped
 
-#for (i in 13:ncol(data)) {
   y[1,1] <- sum(data[colname] == 0 & data$FinWon_Status == 1)
   y[2,1] <- sum(data[colname] == 0 & data$FinWon_Status == 0)
   y[1,2] <- sum(data[colname] == 1 & data$FinWon_Status == 1)
@@ -114,8 +180,7 @@ y[2,3] <- sum(data$FinWon_Status == 0) # Lost/Dropped
   
   yy <- as.data.frame(y)
   yy <- as.data.frame(lapply(yy, fn_norm_max))
-#  browser()
-  summary (yy)
+  # summary (yy)
   
   par(mfrow=c(1,1))
   bplt <- barplot(as.matrix(yy), main=names(data[colname]), names.arg=c("0","1","W/LD"),
@@ -124,18 +189,8 @@ y[2,3] <- sum(data$FinWon_Status == 0) # Lost/Dropped
                   col=c("white", "darkgray"))
                   #col=c("white", "darkgray", "gray"))
   text(x= bplt, as.matrix(yy)+0.02, labels=as.character(y), xpd=TRUE)
-#}
-
-#data_value <- subset(copy(data),select=c('FinWon_Status',colname));
-#names(data_value) <- c('Won_LR.Status','VALUE');
-#data_value <- na.omit(data_value);
-
-#par(mfrow=c(2,1));
-#hist(data_value$VALUE,xlab=paste("Value:",colname),main = 'Histogram',xlim=c(min(data_value$VALUE),max(data_value$VALUE)));
-#sm.density.compare(as.numeric(data_value$VALUE),group = data_value$Won_LR.Status, xlab=paste("Value:",colname),xlim=c(min(data_value$VALUE),max(data_value$VALUE)));
-#title("Density compare");
-#legend("topright",levels(as.factor(data_value$Won_LR.Status)), fill=c(2:(2+length(levels(as.factor(data_value$Won_LR.Status))))),cex=1);
-}
+} # end else
+} # end plotDensity
 
 plotPCA <- function()
 {

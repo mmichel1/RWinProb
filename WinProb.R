@@ -357,7 +357,7 @@ server <- function(input, output,session) {
   observe({
 #    browser()
     ListOfVars <- names(data)
-    ListOfVars <- ListOfVars[!ListOfVars %in% c('FinOE','FinDelStart','FinWon_Status', 'FinLost_Status')];  #only predictor variables relevant
+    ListOfVars <- ListOfVars[!ListOfVars %in% c('FinOE','FinDelStart','FinWon_Status', 'FinLost_Status', 'DelStart')];  #only predictor variables relevant
     
     updateSelectInput(session, "selectVarNameForDensity", choices = ListOfVars);  
     updateSliderInput(session, "intNoCorrVars",max = ncol(data));
